@@ -231,6 +231,405 @@
 //---------------------------------------------------------------------
 //new2 after using change_log
 
+// const express = require('express');
+// const bodyParser = require('body-parser');
+// const cors = require('cors');
+// const { Pool } = require('pg');
+
+// const app = express();
+// const port = 1111;
+
+// app.use(cors());
+// app.use(bodyParser.json());
+
+// // PostgreSQL connection setup
+// const pool = new Pool({
+//   user: 'azamp_target',
+//   host: '127.0.0.1',
+//   database: 'edb',
+//   password: 'azamp_target',
+//   port: 5435,
+// });
+
+// pool.on('connect', () => {
+//   console.log('Connected to the PostgreSQL database');
+// });
+
+// // Endpoint to add user details and log changes
+// app.post("/add-details", async (req, res) => {
+//   try {
+//     const { user_dimid, user_name, parent_name, domain_name } = req.body;
+
+//     // Begin a transaction to ensure atomicity
+//     const client = await pool.connect();
+//     try {
+//       await client.query('BEGIN');
+
+//       // Insert into dim_user table
+//       // const insertQuery = `
+//       //   INSERT INTO dim_user (user_name, parent_name, domain_name)
+//       //   VALUES ($1, $2, $3)
+//       //   RETURNING *;
+//       // `;
+//       // const insertValues = [user_name, parent_name, domain_name];
+//       // const result = await client.query(insertQuery, insertValues);
+
+//       const insertQuery = `
+//       INSERT INTO dim_user (user_dimid, user_name, parent_name, domain_name)
+//       VALUES ($1, $2, $3, $4)
+//       RETURNING *;
+//     `;
+//     const insertValues = [user_dimid, user_name, parent_name, domain_name];
+//     const result = await client.query(insertQuery, insertValues);
+    
+
+//       if (result.rows.length > 0) {
+//         // Log changes into change_log table
+//         const logEntries = [];
+
+
+//         if (user_dimid) {
+//           logEntries.push({
+//             change_column: 'user_dimid',
+//             old_value: '',
+//             new_value: user_dimid
+//           });
+//         }
+//         if (user_name) {
+//           logEntries.push({
+//             change_column: 'user_name',
+//             old_value: null,
+//             new_value: user_name
+//           });
+//         }
+//         if (parent_name) {
+//           logEntries.push({
+//             change_column: 'parent_name',
+//             old_value: null,
+//             new_value: parent_name
+//           });
+//         }
+//         if (domain_name) {
+//           logEntries.push({
+//             change_column: 'domain_name',
+//             old_value: null,
+//             new_value: domain_name
+//           });
+//         }
+
+//         for (const entry of logEntries) {
+//           const logQuery = `
+//             INSERT INTO change_log (change_date, change_column, old_value, new_value)
+//             VALUES (CURRENT_TIMESTAMP, $1, $2, $3);
+//           `;
+//           const logValues = [entry.change_column, entry.old_value, entry.new_value];
+//           await client.query(logQuery, logValues);
+//         }
+
+//         await client.query('COMMIT');
+//         res.status(201).json({ message: "Details added successfully", user: result.rows[0] });
+//       } else {
+//         res.status(400).json({ message: "Failed to add details" });
+//       }
+//     } catch (err) {
+//       await client.query('ROLLBACK');
+//       console.error("Error executing transaction", err.stack);
+//       res.status(500).send("Server Error");
+//     } finally {
+//       client.release();
+//     }
+//   } catch (err) {
+//     console.error("Error connecting to database", err.stack);
+//     res.status(500).send("Server Error");
+//   }
+// });
+
+// // Sample route to fetch data from PostgreSQL (for testing purposes)
+// app.get('/data', async (req, res) => {
+//   try {
+//     console.log('Fetching data');
+//     const result = await pool.query('SELECT * FROM dim_user');
+//     res.json(result.rows);
+//   } catch (err) {
+//     console.error('Error executing query', err.stack);
+//     res.status(500).send('Server Error');
+//   }
+// });
+
+// // Your other routes (e.g., login, fetching user details) remain unchanged
+// // Ensure they handle requests properly and follow your application's logic
+
+// app.listen(port, () => {
+//   console.log(`Server running on port ${port}`);
+// });
+
+// -----------------------new3-----------------------
+
+// const express = require('express');
+// const bodyParser = require('body-parser');
+// const cors = require('cors');
+// const { Pool } = require('pg');
+
+// const app = express();
+// const port = 1111;
+
+// app.use(cors());
+// app.use(bodyParser.json());
+
+// // PostgreSQL connection setup
+// const pool = new Pool({
+//   user: 'azamp_target',
+//   host: '127.0.0.1',
+//   database: 'edb',
+//   password: 'azamp_target',
+//   port: 5435,
+// });
+
+// pool.on('connect', () => {
+//   console.log('Connected to the PostgreSQL database');
+// });
+
+// // Endpoint to add user details and log changes
+// app.post('/add-details', async (req, res) => {
+//   try {
+//     const { user_dimid, user_name, parent_name, domain_name } = req.body;
+
+//     // Begin a transaction to ensure atomicity
+//     const client = await pool.connect();
+//     try {
+//       await client.query('BEGIN');
+
+//       // Insert into dim_user table with ON CONFLICT to handle duplicates
+//       const insertQuery = `
+//         INSERT INTO dim_user (user_dimid, user_name, parent_name, domain_name)
+//         VALUES ($1, $2, $3, $4)
+//         ON CONFLICT (user_dimid) DO NOTHING
+//         RETURNING *;
+//       `;
+//       const insertValues = [user_dimid, user_name, parent_name, domain_name];
+//       const result = await client.query(insertQuery, insertValues);
+
+//       if (result.rows.length > 0) {
+//         // Log changes into change_log table
+//         const logEntries = [];
+
+//         if (user_dimid) {
+//           logEntries.push({
+//             change_column: 'user_dimid',
+//             old_value: '',
+//             new_value: user_dimid,
+//           });
+//         }
+//         if (user_name) {
+//           logEntries.push({
+//             change_column: 'user_name',
+//             old_value: null,
+//             new_value: user_name,
+//           });
+//         }
+//         if (parent_name) {
+//           logEntries.push({
+//             change_column: 'parent_name',
+//             old_value: null,
+//             new_value: parent_name,
+//           });
+//         }
+//         if (domain_name) {
+//           logEntries.push({
+//             change_column: 'domain_name',
+//             old_value: null,
+//             new_value: domain_name,
+//           });
+//         }
+
+//         for (const entry of logEntries) {
+//           const logQuery = `
+//             INSERT INTO change_log (change_date, change_column, old_value, new_value)
+//             VALUES (CURRENT_TIMESTAMP, $1, $2, $3);
+//           `;
+//           const logValues = [entry.change_column, entry.old_value, entry.new_value];
+//           await client.query(logQuery, logValues);
+//         }
+
+//         await client.query('COMMIT');
+//         res.status(201).json({ message: 'Details added successfully', user: result.rows[0] });
+//       } else {
+//         await client.query('ROLLBACK');
+//         res.status(400).json({ message: 'Failed to add details or duplicate entry' });
+//       }
+//     } catch (err) {
+//       await client.query('ROLLBACK');
+//       console.error('Error executing transaction', err.stack);
+//       res.status(500).send('Server Error');
+//     } finally {
+//       client.release();
+//     }
+//   } catch (err) {
+//     console.error('Error connecting to database', err.stack);
+//     res.status(500).send('Server Error');
+//   }
+// });
+
+// // Sample route to fetch data from PostgreSQL (for testing purposes)
+// app.get('/data', async (req, res) => {
+//   try {
+//     console.log('Fetching data');
+//     const result = await pool.query('SELECT * FROM dim_user');
+//     res.json(result.rows);
+//   } catch (err) {
+//     console.error('Error executing query', err.stack);
+//     res.status(500).send('Server Error');
+//   }
+// });
+
+// // Your other routes (e.g., login, fetching user details) remain unchanged
+// // Ensure they handle requests properly and follow your application's logic
+
+// app.listen(port, () => {
+//   console.log(`Server running on port ${port}`);
+// });
+
+
+//-----------------------new4---------------------
+
+// const express = require('express');
+// const bodyParser = require('body-parser');
+// const cors = require('cors');
+// const { Pool } = require('pg');
+
+// const app = express();
+// const port = 1111;
+
+// app.use(cors());
+// app.use(bodyParser.json());
+
+// // PostgreSQL connection setup
+// const pool = new Pool({
+//   user: 'azamp_target',
+//   host: '127.0.0.1',
+//   database: 'edb',
+//   password: 'azamp_target',
+//   port: 5435,
+// });
+
+// pool.on('connect', () => {
+//   console.log('Connected to the PostgreSQL database');
+// });
+
+// // Sample route to fetch data from PostgreSQL (for testing purposes)
+// app.get('/data', async (req, res) => {
+//   try {
+//     console.log('Fetching data');
+//     const result = await pool.query('SELECT * FROM dim_user');
+//     res.json(result.rows);
+//   } catch (err) {
+//     console.error('Error executing query', err.stack);
+//     res.status(500).send('Server Error');
+//   }
+// });
+
+// app.post("/login", async (req, res) => {
+//   try {
+//     const { user_name, password } = req.body; // Destructure username and password
+//     const query = 'SELECT * FROM dim_user WHERE user_name = $1 AND password = $2';
+//     const result = await pool.query(query, [user_name, password]);
+
+//     if (!result.rows.length) {
+//       res.status(401).json({ message: "Invalid username/password" });
+//     } else {
+//       // User authenticated (modify as needed for your specific use case)
+//       res.status(200).json({ message: "Success" });
+//     }
+//   } catch (err) {
+//     console.error("Error executing query", err.stack);
+//     res.status(500).send("Server Error");
+//   }
+// });
+
+// app.post("/add-details", async (req, res) => {
+//   try {
+//     const { user_name, parent_name, domain_name } = req.body;
+
+//     const query = `
+//       INSERT INTO dim_user (user_name, parent_name, domain_name)
+//       VALUES ($1, $2, $3)
+//       RETURNING *;
+//     `;
+
+//     const result = await pool.query(query, [user_name, parent_name, domain_name]);
+
+//     if (result.rows.length) {
+//       res.status(201).json({ message: "Details added successfully", user: result.rows[0] });
+//     } else {
+//       res.status(400).json({ message: "Failed to add details" });
+//     }
+//   } catch (err) {
+//     console.error("Error executing query", err.stack);
+//     res.status(500).send("Server Error");
+//   }
+// });
+
+// // Endpoint to fetch user details and log changes
+// app.get('/user-details', async (req, res) => {
+//   try {
+//     const { user_name, parent_name, domain_name, category_name } = req.query;
+//     let query = 'SELECT user_name, parent_name, domain_name, category_name FROM dim_user WHERE 1=1';
+//     const queryParams = [];
+
+//     const filters = { user_name, parent_name, domain_name, category_name };
+
+//     // Filter the query based on provided parameters
+//     Object.keys(filters).forEach((key) => {
+//       if (filters[key]) {
+//         queryParams.push(filters[key]);
+//         query += ` AND ${key} = $${queryParams.length}`;
+//       }
+//     });
+
+//     const result = await pool.query(query, queryParams);
+
+//     if (result.rows.length > 0) {
+//       // Log changes into change_log table
+//       const client = await pool.connect();
+//       try {
+//         await client.query('BEGIN');
+
+//         for (const key of Object.keys(filters)) {
+//           if (filters[key]) {
+//             const logQuery = `
+//               INSERT INTO change_log (change_date, change_column, old_value, new_value)
+//               VALUES (CURRENT_TIMESTAMP, $1, $2, $3);
+//             `;
+//             const logValues = [key, null, filters[key]]; // Assuming no old_value for new searches
+//             await client.query(logQuery, logValues);
+//           }
+//         }
+
+//         await client.query('COMMIT');
+//       } catch (err) {
+//         await client.query('ROLLBACK');
+//         console.error('Error logging changes', err.stack);
+//         res.status(500).send('Server Error');
+//       } finally {
+//         client.release();
+//       }
+//     }
+
+//     res.json(result.rows);
+//   } catch (err) {
+//     console.error('Error executing query', err.stack);
+//     res.status(500).send('Server Error');
+//   }
+// });
+
+// // Other routes...
+
+// app.listen(port, () => {
+//   console.log(`Server running on port ${port}`);
+// });
+
+//new5
+
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
@@ -255,95 +654,6 @@ pool.on('connect', () => {
   console.log('Connected to the PostgreSQL database');
 });
 
-// Endpoint to add user details and log changes
-app.post("/add-details", async (req, res) => {
-  try {
-    const { user_dimid, user_name, parent_name, domain_name } = req.body;
-
-    // Begin a transaction to ensure atomicity
-    const client = await pool.connect();
-    try {
-      await client.query('BEGIN');
-
-      // Insert into dim_user table
-      // const insertQuery = `
-      //   INSERT INTO dim_user (user_name, parent_name, domain_name)
-      //   VALUES ($1, $2, $3)
-      //   RETURNING *;
-      // `;
-      // const insertValues = [user_name, parent_name, domain_name];
-      // const result = await client.query(insertQuery, insertValues);
-
-      const insertQuery = `
-      INSERT INTO dim_user (user_dimid, user_name, parent_name, domain_name)
-      VALUES ($1, $2, $3, $4)
-      RETURNING *;
-    `;
-    const insertValues = [user_dimid, user_name, parent_name, domain_name];
-    const result = await client.query(insertQuery, insertValues);
-    
-
-      if (result.rows.length > 0) {
-        // Log changes into change_log table
-        const logEntries = [];
-
-
-        if (user_dimid) {
-          logEntries.push({
-            change_column: 'user_dimid',
-            old_value: '',
-            new_value: user_dimid
-          });
-        }
-        if (user_name) {
-          logEntries.push({
-            change_column: 'user_name',
-            old_value: null,
-            new_value: user_name
-          });
-        }
-        if (parent_name) {
-          logEntries.push({
-            change_column: 'parent_name',
-            old_value: null,
-            new_value: parent_name
-          });
-        }
-        if (domain_name) {
-          logEntries.push({
-            change_column: 'domain_name',
-            old_value: null,
-            new_value: domain_name
-          });
-        }
-
-        for (const entry of logEntries) {
-          const logQuery = `
-            INSERT INTO change_log (change_date, change_column, old_value, new_value)
-            VALUES (CURRENT_TIMESTAMP, $1, $2, $3);
-          `;
-          const logValues = [entry.change_column, entry.old_value, entry.new_value];
-          await client.query(logQuery, logValues);
-        }
-
-        await client.query('COMMIT');
-        res.status(201).json({ message: "Details added successfully", user: result.rows[0] });
-      } else {
-        res.status(400).json({ message: "Failed to add details" });
-      }
-    } catch (err) {
-      await client.query('ROLLBACK');
-      console.error("Error executing transaction", err.stack);
-      res.status(500).send("Server Error");
-    } finally {
-      client.release();
-    }
-  } catch (err) {
-    console.error("Error connecting to database", err.stack);
-    res.status(500).send("Server Error");
-  }
-});
-
 // Sample route to fetch data from PostgreSQL (for testing purposes)
 app.get('/data', async (req, res) => {
   try {
@@ -356,9 +666,114 @@ app.get('/data', async (req, res) => {
   }
 });
 
-// Your other routes (e.g., login, fetching user details) remain unchanged
-// Ensure they handle requests properly and follow your application's logic
+app.post("/login", async (req, res) => {
+  try {
+    const { user_name, password } = req.body; // Destructure username and password
+    const query = 'SELECT * FROM dim_user WHERE user_name = $1 AND password = $2';
+    const result = await pool.query(query, [user_name, password]);
+
+    if (!result.rows.length) {
+      res.status(401).json({ message: "Invalid username/password" });
+    } else {
+      // User authenticated (modify as needed for your specific use case)
+      res.status(200).json({ message: "Success" });
+    }
+  } catch (err) {
+    console.error("Error executing query", err.stack);
+    res.status(500).send("Server Error");
+  }
+});
+
+app.post("/add-details", async (req, res) => {
+  try {
+    const { user_name, parent_name, domain_name } = req.body;
+
+    const query = `
+      INSERT INTO dim_user (user_name, parent_name, domain_name)
+      VALUES ($1, $2, $3)
+      RETURNING *;
+    `;
+
+    const result = await pool.query(query, [user_name, parent_name, domain_name]);
+
+    if (result.rows.length) {
+      res.status(201).json({ message: "Details added successfully", user: result.rows[0] });
+    } else {
+      res.status(400).json({ message: "Failed to add details" });
+    }
+  } catch (err) {
+    console.error("Error executing query", err.stack);
+    res.status(500).send("Server Error");
+  }
+});
+
+// Endpoint to fetch user details and log changes
+app.get('/user-details', async (req, res) => {
+  try {
+    const { user_name, parent_name, domain_name, category_name } = req.query;
+    let query = 'SELECT user_name, parent_name, domain_name, category_name FROM dim_user WHERE 1=1';
+    const queryParams = [];
+
+    const filters = { user_name, parent_name, domain_name, category_name };
+
+    // Filter the query based on provided parameters
+    Object.keys(filters).forEach((key) => {
+      if (filters[key]) {
+        queryParams.push(filters[key]);
+        query += ` AND ${key} = $${queryParams.length}`;
+      }
+    });
+
+    const result = await pool.query(query, queryParams);
+
+    if (result.rows.length > 0) {
+      // Log changes into change_log table
+      const client = await pool.connect();
+      try {
+        await client.query('BEGIN');
+
+        for (const key of Object.keys(filters)) {
+          if (filters[key]) {
+            // Check if there is an existing entry in change_log
+            const oldValueQuery = `
+              SELECT new_value 
+              FROM change_log 
+              WHERE change_column = $1 
+              ORDER BY change_date DESC 
+              LIMIT 1;
+            `;
+            const oldValueResult = await client.query(oldValueQuery, [key]);
+            const old_value = oldValueResult.rows.length ? oldValueResult.rows[0].new_value : null;
+
+            const logQuery = `
+              INSERT INTO change_log (change_date, change_column, old_value, new_value)
+              VALUES (CURRENT_TIMESTAMP, $1, $2, $3);
+            `;
+            const logValues = [key, old_value, filters[key]];
+            await client.query(logQuery, logValues);
+          }
+        }
+
+        await client.query('COMMIT');
+      } catch (err) {
+        await client.query('ROLLBACK');
+        console.error('Error logging changes', err.stack);
+        res.status(500).send('Server Error');
+      } finally {
+        client.release();
+      }
+    }
+
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Error executing query', err.stack);
+    res.status(500).send('Server Error');
+  }
+});
+
+// Other routes...
 
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
 });
+
