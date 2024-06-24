@@ -1555,7 +1555,10 @@ app.get('/user-details', async (req, res) => {
   }
 });
 
-// Other routes...
+
+// New Api to Be created. 
+
+
 
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
